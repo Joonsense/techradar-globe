@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TECHRADAR // GLOBAL INTEL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- Boot sequence overlay -->
+  <div id="boot-overlay">
+    <div class="boot-inner">
+      <div class="boot-logo">TECHRADAR</div>
+      <div class="boot-sub">// GLOBAL TECH INTELLIGENCE PLATFORM v3.0</div>
+      <div class="boot-lines" id="boot-lines"></div>
+      <div class="boot-bar"><div class="boot-bar-fill" id="boot-bar-fill"></div></div>
+      <div class="boot-status" id="boot-status">INITIALIZING SYSTEMS…</div>
+    </div>
+  </div>
+
+  <!-- Scanline overlay (full screen) -->
+  <div id="scanlines"></div>
+
+  <!-- Corner brackets -->
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <!-- ── HUD: Top-left system info ──────────────────────────── -->
+  <div id="hud-tl">
+    <div class="hud-title">TECHRADAR <span class="hud-sep">//</span> <span class="hud-live blink">LIVE INTEL</span></div>
+    <div class="hud-row"><span class="hud-lbl">UTC</span><span class="hud-val" id="hud-utc">--:--:--</span></div>
+    <div class="hud-row"><span class="hud-lbl">SIGNALS</span><span class="hud-val cyan" id="hud-signals">0</span><span class="hud-unit">ACTIVE</span></div>
+    <div class="hud-row"><span class="hud-lbl">SOURCES</span><span class="hud-val" id="hud-sources">0</span><span class="hud-unit">ONLINE</span></div>
+    <div class="hud-row"><span class="hud-lbl">LAT</span><span class="hud-val dim" id="hud-lat">--.-°</span><span class="hud-lbl" style="margin-left:8px">LNG</span><span class="hud-val dim" id="hud-lng">--.-°</span></div>
+  </div>
+
+  <!-- ── HUD: Top-right status ──────────────────────────────── -->
+  <div id="hud-tr">
+    <div class="hud-row"><span class="hud-lbl">LAST UPDATE</span><span class="hud-val" id="hud-last">—</span></div>
+    <div class="hud-row"><span class="hud-lbl">REFRESH IN</span><span class="hud-val amber" id="hud-refresh">30s</span></div>
+    <div class="hud-row"><span class="hud-lbl">STATUS</span><span class="hud-val green blink-slow" id="hud-status">NOMINAL</span></div>
+    <div class="hud-row"><span class="hud-lbl">WINDOW</span><span class="hud-val" id="hud-window">24H</span></div>
+  </div>
+
+  <!-- ── Source filter bar (top center) ────────────────────── -->
+  <div id="source-bar">
+    <button class="src-btn active" data-source="all">ALL</button>
+    <button class="src-btn" data-source="arxiv">◈ PAPERS</button>
+    <button class="src-btn" data-source="semantic">◈ SCHOLAR</button>
+    <button class="src-btn" data-source="github">⬡ GITHUB</button>
+    <button class="src-btn" data-source="hn">▲ HN</button>
+    <button class="src-btn" data-source="reddit">● REDDIT</button>
+    <button class="src-btn" data-source="devto">◆ DEV.TO</button>
+    <button class="src-btn" data-source="huggingface">✦ HF</button>
+    <button class="src-btn" data-source="news">● NEWS</button>
+  </div>
+
+  <!-- ── Globe (fullscreen background) ─────────────────────── -->
+  <div id="globe"></div>
+
+  <!-- ── Floating Intel Cards Container ────────────────────── -->
+  <div id="cards-layer"></div>
+
+  <!-- ── Datacenter hover tooltip ──────────────────────────── -->
+  <div id="dc-tooltip" class="hidden"></div>
+
+  <!-- ── Country Intel Brief (left side panel) ─────────────── -->
+  <div id="country-brief" class="hidden">
+    <div class="brief-header">
+      <span class="brief-tag">INTEL BRIEF</span>
+      <span class="brief-sep">//</span>
+      <span class="brief-code" id="brief-iso">—</span>
+      <button class="brief-close" onclick="closeCountryBrief()">✕</button>
+    </div>
+    <div class="brief-country" id="brief-name">—</div>
+    <div class="brief-divider"></div>
+    <div class="brief-stats">
+      <div class="bs-row"><span class="bs-lbl">TECH SCORE</span><span class="bs-val" id="brief-score">—</span></div>
+      <div class="bs-row"><span class="bs-lbl">SIGNAL DENSITY</span><span class="bs-density" id="brief-density">—</span></div>
+    </div>
+    <div class="brief-divider"></div>
+    <div class="brief-section-lbl">KEY ENTITIES</div>
+    <div class="brief-entities" id="brief-entities"></div>
+    <div class="brief-divider"></div>
+    <div class="brief-section-lbl">TRENDING VECTORS</div>
+    <div class="brief-vectors" id="brief-vectors"></div>
+    <div class="brief-divider"></div>
+    <div class="brief-section-lbl">LIVE SIGNALS <span id="brief-sig-count"></span></div>
+    <div class="brief-signals" id="brief-signals"></div>
+  </div>
+
+  <!-- ── LAYERS panel (right side) ─────────────────────────── -->
+  <div id="layers-panel">
+    <div class="layers-title">LAYERS</div>
+    <label class="layer-row">
+      <input type="checkbox" class="layer-cb" data-layer="signals" checked>
+      <span class="layer-led on"></span><span class="layer-name">SIGNALS</span>
+    </label>
+    <label class="layer-row">
+      <input type="checkbox" class="layer-cb" data-layer="arcs" checked>
+      <span class="layer-led on"></span><span class="layer-name">ARCS</span>
+    </label>
+    <label class="layer-row">
+      <input type="checkbox" class="layer-cb" data-layer="density" checked>
+      <span class="layer-led on"></span><span class="layer-name">DENSITY</span>
+    </label>
+    <label class="layer-row">
+      <input type="checkbox" class="layer-cb" data-layer="companies">
+      <span class="layer-led"></span><span class="layer-name">COMPANIES</span>
+    </label>
+    <label class="layer-row">
+      <input type="checkbox" class="layer-cb" data-layer="investment">
+      <span class="layer-led"></span><span class="layer-name">INVESTMENT</span>
+    </label>
+    <label class="layer-row">
+      <input type="checkbox" class="layer-cb" data-layer="papers">
+      <span class="layer-led"></span><span class="layer-name">PAPERS</span>
+    </label>
+    <label class="layer-row">
+      <input type="checkbox" class="layer-cb" data-layer="datacenters">
+      <span class="layer-led"></span><span class="layer-name">DATACENTERS</span>
+    </label>
+    <label class="layer-row">
+      <input type="checkbox" class="layer-cb" data-layer="energyEfficiency">
+      <span class="layer-led"></span><span class="layer-name">ENERGY EFF.</span>
+    </label>
+    <div class="layers-div"></div>
+    <div class="layers-title" style="margin-top:4px">CATEGORY</div>
+    <div id="tag-filters">
+      <button class="tag-btn active" data-tag="all">ALL</button>
+      <button class="tag-btn" data-tag="AI">AI/ML</button>
+      <button class="tag-btn" data-tag="DevTools">DEVTOOLS</button>
+      <button class="tag-btn" data-tag="SaaS">SAAS</button>
+      <button class="tag-btn" data-tag="Infra">INFRA</button>
+      <button class="tag-btn" data-tag="Security">SECURITY</button>
+      <button class="tag-btn" data-tag="Web3">WEB3</button>
+    </div>
+    <div class="layers-div"></div>
+    <div class="layers-title" style="margin-top:4px">TIME WINDOW</div>
+    <div id="time-filters">
+      <button class="time-btn" data-time="1h">1H</button>
+      <button class="time-btn" data-time="6h">6H</button>
+      <button class="time-btn active" data-time="24h">24H</button>
+      <button class="time-btn" data-time="7d">7D</button>
+    </div>
+  </div>
+
+  <!-- ── Live Feed (right panel, collapsible) ───────────────── -->
+  <div id="feed-panel">
+    <div class="feed-hdr">
+      <span class="feed-title">SIGNAL FEED</span>
+      <span class="feed-ct" id="feed-ct">0</span>
+      <button class="feed-toggle" id="feed-toggle" onclick="toggleFeed()">◀</button>
+    </div>
+    <div id="feed-list"></div>
+  </div>
+
+  <!-- ── Terminal event stream (bottom left) ────────────────── -->
+  <div id="event-log">
+    <div class="elog-hdr">// EVENT STREAM</div>
+    <div id="elog-lines"></div>
+  </div>
+
+  <!-- ── Timeline bar (bottom) ──────────────────────────────── -->
+  <div id="timeline-bar">
+    <div class="tl-label">TIMELINE</div>
+    <div class="tl-marks">
+      <span>7D</span><span>48H</span><span>24H</span><span>12H</span><span>6H</span><span>3H</span><span>1H</span><span class="tl-now">NOW</span>
+    </div>
+    <div class="tl-track">
+      <div class="tl-fill" id="tl-fill"></div>
+      <div class="tl-thumb" id="tl-thumb"></div>
+    </div>
+    <button class="tl-play" id="tl-play" onclick="toggleTimelinePlay()">▶</button>
+  </div>
+
+</div><!-- /app -->
+
+<script src="https://unpkg.com/globe.gl@2/dist/globe.gl.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
