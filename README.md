@@ -4,8 +4,6 @@
 > AI breakthroughs, and datacenter energy efficiency
 > across the world on an interactive 3D globe.
 
-![TechRadar Globe Demo](assets/demo.gif)
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-00ffcc.svg)](LICENSE)
 [![No API Keys](https://img.shields.io/badge/API%20Keys-None%20Required-00ff88.svg)]()
 [![Made with Globe.gl](https://img.shields.io/badge/Made%20with-Globe.gl-blue.svg)](https://globe.gl)
@@ -35,6 +33,8 @@ but built for the tech world.
 ---
 
 ## ✦ Screenshots
+
+> Demo assets coming soon — run locally to see it in action.
 
 | Globe View | Country Intel Brief | Energy Layer |
 |-----------|-------------------|--------------|
@@ -119,9 +119,14 @@ No build step. No npm install. Pure HTML/CSS/JS.
 
 ```
 techradar-globe/
-├── index.html     # HUD layout, globe container, layer panels
-├── style.css      # Military design system, all component styles
-└── app.js         # Data collectors, globe render, DC energy layer
+├── index.html     # Entry point + HUD layout
+├── app.js         # Core logic
+│   ├── DataCollector   # Parallel API fetching
+│   ├── GlobeRenderer   # Globe.gl 3D rendering
+│   ├── EnergyLayer     # Open-Meteo integration
+│   ├── SignalParser    # Source normalization
+│   └── UIController    # Panels, filters, timeline
+└── style.css      # HUD theme system
 ```
 
 **Zero dependencies beyond CDN:**
@@ -149,15 +154,53 @@ pueEstimate  = (1.2 + (current.temperature_2m / 100 * 0.3)).toFixed(2)
 
 ---
 
+## ✦ Roadmap
+
+- [x] 3D Globe with real-time signals
+- [x] Datacenter energy efficiency layer
+- [x] Country hover intel brief
+- [x] Military HUD aesthetic
+- [x] Timeline scrubber
+- [ ] Electricity Maps carbon intensity overlay
+- [ ] ProductHunt new product launches
+- [ ] VC funding flow arcs (Crunchbase)
+- [ ] AI compute power heatmap by country
+- [ ] WebSocket real-time push
+- [ ] Mobile / touch optimization
+- [ ] Embeddable widget mode
+- [ ] Alert system (keyword triggers)
+
+---
+
 ## ✦ Contributing
 
-PRs welcome. Particularly interested in:
-- Additional signal sources (Product Hunt, LinkedIn, etc.)
-- More datacenter locations
-- WebSocket real-time updates
+Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+Quick ways to contribute:
+- Add a new data source in `app.js`
+- Improve geocoding accuracy
+- Add country intel data
+- Fix mobile rendering
+- Translate UI labels
 
 ---
 
 ## ✦ License
 
-MIT © [Joonsense](https://github.com/Joonsense)
+MIT © 2026 [Kai Kim](https://github.com/Joonsense)
+
+---
+
+## ✦ Built By
+
+**Kai Kim** — Founder, [DeblockX Labs](https://deblockxlabs.com)
+
+🐦 [@kaikimlabs](https://x.com/kaikimlabs)
+
+*"The best way to track the future is to watch where the signals are coming from."*
+
+---
+
+<p align="center">
+  <sub>TechRadar Globe is part of the DeblockX Labs open intelligence suite.</sub>
+</p>
