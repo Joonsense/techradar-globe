@@ -47,39 +47,6 @@ html, body { height:100%; background:var(--bg); color:var(--text); font-family:v
 .corner-bl { bottom:52px; left:12px; border-bottom:2px solid var(--cyan); border-left:2px solid var(--cyan); }
 .corner-br { bottom:52px; right:12px; border-bottom:2px solid var(--cyan); border-right:2px solid var(--cyan); }
 
-/* ── Boot Overlay ─────────────────────────────────────────── */
-#boot-overlay {
-  position:fixed; inset:0; z-index:9999;
-  background:var(--bg);
-  display:flex; align-items:center; justify-content:center;
-  transition:opacity .8s ease;
-}
-#boot-overlay.fade { opacity:0; pointer-events:none; }
-.boot-inner { width:460px; display:flex; flex-direction:column; gap:14px; }
-.boot-logo {
-  font-size:32px; font-weight:700; letter-spacing:.35em;
-  color:var(--cyan); text-shadow:0 0 30px var(--cyan);
-}
-.boot-sub { font-size:10px; letter-spacing:.15em; color:var(--dim); }
-.boot-lines {
-  font-size:10px; line-height:1.8; color:var(--dim);
-  height:110px; overflow:hidden;
-}
-.boot-line { animation:fadeIn .2s ease forwards; opacity:0; }
-.boot-line.ok::after { content:' [OK]'; color:var(--green); }
-.boot-line.warn::after { content:' [WARN]'; color:var(--amber); }
-@keyframes fadeIn { to { opacity:1; } }
-.boot-bar {
-  height:2px; background:rgba(0,255,204,0.1);
-  border-radius:2px; overflow:hidden;
-}
-.boot-bar-fill {
-  height:100%; width:0%; background:var(--cyan);
-  box-shadow:0 0 8px var(--cyan);
-  transition:width .3s ease;
-}
-.boot-status { font-size:10px; letter-spacing:.12em; color:var(--cyan); opacity:.6; }
-
 /* ── Globe ────────────────────────────────────────────────── */
 #globe {
   position:fixed; inset:0; z-index:0;

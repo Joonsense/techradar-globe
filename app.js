@@ -144,9 +144,34 @@ let cardIdCounter = 0;
 let hoveredPolygon = null;
 let dcWeatherCache = {};   // keyed by dc.name
 let dcTooltipMoveHandler = null;
+let sourceStatus = {};     // { arxiv:'ok'|'loading'|'error', ... }
 
 // Layer visibility
 const LAYERS = { signals:true, arcs:true, density:true, companies:false, investment:false, papers:false, datacenters:false, energyEfficiency:false };
+
+/* ── FALLBACK SIGNALS (shown instantly before API responses) ──── */
+const FALLBACK_SIGNALS = [
+  { id:'fb-1',  source:'arxiv',      title:'Scaling Laws for Neural Language Models',          desc:'Empirical analysis of how model performance scales with compute, data, and parameters.', url:'https://arxiv.org/abs/2001.08361',       lat:40.71, lon:-74.01,  country:'US', tags:['AI'],       score:92, published_at:new Date(Date.now()-3600000).toISOString()  },
+  { id:'fb-2',  source:'github',     title:'microsoft/vscode — Visual Studio Code',            desc:'Open-source code editor with AI-assisted development features.',                         url:'https://github.com/microsoft/vscode',    lat:47.64, lon:-122.13, country:'US', tags:['DevTools'], score:88, published_at:new Date(Date.now()-7200000).toISOString()  },
+  { id:'fb-3',  source:'hn',         title:'OpenAI releases new reasoning model',              desc:'Hacker News discussion on the latest OpenAI model release with reasoning capabilities.',  url:'https://news.ycombinator.com/item?id=1', lat:37.77, lon:-122.42, country:'US', tags:['AI'],       score:85, published_at:new Date(Date.now()-1800000).toISOString()  },
+  { id:'fb-4',  source:'arxiv',      title:'Attention Is All You Need — revisited',            desc:'Modern reanalysis of the transformer architecture and its downstream applications.',       url:'https://arxiv.org/abs/1706.03762',       lat:51.51, lon:-0.13,   country:'GB', tags:['AI'],       score:90, published_at:new Date(Date.now()-5400000).toISOString()  },
+  { id:'fb-5',  source:'huggingface',title:'mistralai/Mistral-7B-v0.1',                        desc:'Highly efficient 7B parameter language model from Mistral AI.',                          url:'https://huggingface.co/mistralai/Mistral-7B-v0.1', lat:48.86, lon:2.35, country:'FR', tags:['AI'], score:87, published_at:new Date(Date.now()-9000000).toISOString()  },
+  { id:'fb-6',  source:'devto',      title:'Building Production-Ready RAG Pipelines',         desc:'Step-by-step guide to deploying retrieval-augmented generation in production.',           url:'https://dev.to',                         lat:40.71, lon:-74.01,  country:'US', tags:['AI'],       score:78, published_at:new Date(Date.now()-10800000).toISOString() },
+  { id:'fb-7',  source:'github',     title:'vercel/next.js — The React Framework',            desc:'Production-ready React framework with server-side rendering and static generation.',      url:'https://github.com/vercel/next.js',      lat:37.77, lon:-122.42, country:'US', tags:['DevTools'], score:86, published_at:new Date(Date.now()-14400000).toISOString() },
+  { id:'fb-8',  source:'news',       title:'AI Funding Hits Record High in Q1 2025',          desc:'Venture capital investment in AI startups surpasses $50B globally in first quarter.',     url:'https://techcrunch.com',                 lat:37.78, lon:-122.41, country:'US', tags:['AI','SaaS'],score:82, published_at:new Date(Date.now()-18000000).toISOString() },
+  { id:'fb-9',  source:'arxiv',      title:'DeepSeek-R1: Incentivizing Reasoning via RL',     desc:'Chinese research on reinforcement learning for advanced reasoning in LLMs.',              url:'https://arxiv.org/abs/2501.12948',       lat:39.91, lon:116.39,  country:'CN', tags:['AI'],       score:93, published_at:new Date(Date.now()-21600000).toISOString() },
+  { id:'fb-10', source:'github',     title:'kubernetes/kubernetes — Container Orchestration', desc:'Production-grade container orchestration for automated deployment and scaling.',          url:'https://github.com/kubernetes/kubernetes',lat:37.42, lon:-122.08, country:'US', tags:['Infra'],   score:84, published_at:new Date(Date.now()-25200000).toISOString() },
+  { id:'fb-11', source:'semantic',   title:'GPT-4 Technical Report',                          desc:'Technical overview of GPT-4 architecture, training, and capabilities from OpenAI.',      url:'https://arxiv.org/abs/2303.08774',       lat:37.79, lon:-122.40, country:'US', tags:['AI'],       score:91, published_at:new Date(Date.now()-28800000).toISOString() },
+  { id:'fb-12', source:'hn',         title:'Cloudflare announces AI Gateway for enterprise',  desc:'Discussion: new AI proxy layer with caching, rate limiting and observability.',           url:'https://news.ycombinator.com/item?id=2', lat:37.78, lon:-122.39, country:'US', tags:['Infra'],    score:79, published_at:new Date(Date.now()-32400000).toISOString() },
+  { id:'fb-13', source:'arxiv',      title:'Gemma: Open Models Based on Gemini Research',     desc:'Google releases open-weight models built from Gemini research.',                         url:'https://arxiv.org/abs/2403.08295',       lat:37.42, lon:-122.08, country:'US', tags:['AI'],       score:88, published_at:new Date(Date.now()-36000000).toISOString() },
+  { id:'fb-14', source:'devto',      title:'TypeScript 5.4 Features You Should Know',         desc:'Deep dive into the latest TypeScript features improving developer productivity.',         url:'https://dev.to',                         lat:47.64, lon:-122.13, country:'US', tags:['DevTools'], score:75, published_at:new Date(Date.now()-39600000).toISOString() },
+  { id:'fb-15', source:'huggingface',title:'google/gemma-7b',                                  desc:'Open-weight language model from Google based on Gemini technology.',                    url:'https://huggingface.co/google/gemma-7b', lat:37.42, lon:-122.08, country:'US', tags:['AI'],       score:86, published_at:new Date(Date.now()-43200000).toISOString() },
+  { id:'fb-16', source:'news',       title:'Samsung unveils next-gen HBM4 memory chips',      desc:'New high-bandwidth memory designed for AI accelerators expected in late 2025.',          url:'https://techcrunch.com',                 lat:37.57, lon:126.98,  country:'KR', tags:['Infra'],    score:80, published_at:new Date(Date.now()-46800000).toISOString() },
+  { id:'fb-17', source:'github',     title:'anthropics/anthropic-sdk-python',                 desc:'Official Python SDK for the Anthropic API with async support.',                          url:'https://github.com/anthropics/anthropic-sdk-python', lat:37.79, lon:-122.40, country:'US', tags:['AI','DevTools'], score:83, published_at:new Date(Date.now()-50400000).toISOString() },
+  { id:'fb-18', source:'arxiv',      title:'Sora: Video generation models as world simulators',desc:'OpenAI\'s analysis of training video generation models to understand the physical world.', url:'https://openai.com/sora',               lat:37.77, lon:-122.42, country:'US', tags:['AI'],       score:94, published_at:new Date(Date.now()-54000000).toISOString() },
+  { id:'fb-19', source:'semantic',   title:'CLIP: Learning Transferable Visual Models',       desc:'Contrastive learning approach for connecting images and text at scale.',                  url:'https://arxiv.org/abs/2103.00020',       lat:37.78, lon:-122.41, country:'US', tags:['AI'],       score:89, published_at:new Date(Date.now()-57600000).toISOString() },
+  { id:'fb-20', source:'news',       title:'EU AI Act enforcement begins for high-risk systems',desc:'European regulators begin enforcing compliance rules for AI systems in healthcare and finance.', url:'https://techcrunch.com',           lat:48.86, lon:2.35,    country:'FR', tags:['AI','Security'], score:77, published_at:new Date(Date.now()-61200000).toISOString() },
+];
 
 /* ── DATA CENTERS ────────────────────────────────────────────── */
 const DATA_CENTERS = [
@@ -450,38 +475,88 @@ async function fetchNews(){
 }
 
 /* ── LOAD ALL ─────────────────────────────────────────────────── */
-async function loadAll(){
-  setHudStatus('FETCHING', false);
-  try {
-    const results = await Promise.allSettled([
-      fetchArxiv(),fetchSemantic(),fetchGitHub(),fetchHN(),
-      fetchHF(),fetchReddit(),fetchDevTo(),fetchNews(),
-    ]);
-    const fresh   = results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
-    const newSigs = fresh.filter(s=>!allSignals.find(x=>x.id===s.id));
-    allSignals = [...newSigs,...allSignals].slice(0,500);
+/* ── INSTANT RENDER ──────────────────────────────────────────── */
+function normalizeFallback(sig){
+  return { ...sig };
+}
 
-    renderGlobe();
-    renderFeed();
-    updateHud();
+function loadFallback(){
+  allSignals = FALLBACK_SIGNALS.map(normalizeFallback);
+  FALLBACK_SIGNALS.forEach(s=>seenUrls.add(s.id));
+  renderGlobe();
+  renderFeed();
+  updateHud();
+  setHudStatus('NOMINAL', true);
+  logEvent({ source:'system', title:'FALLBACK SIGNALS LOADED', published_at:new Date().toISOString() });
+}
 
-    document.getElementById('hud-last').textContent = utcTime();
-    setHudStatus('NOMINAL', true);
+function mergeSignals(newSigs, source){
+  const added = newSigs.filter(s=>!seenUrls.has(s.id));
+  added.forEach(s=>seenUrls.add(s.id));
+  // Remove fallback signals for this source when real data arrives
+  allSignals = allSignals.filter(s=>!(s.source===source&&s.id.startsWith('fb-')));
+  allSignals = [...added, ...allSignals].slice(0, 500);
+  renderGlobe();
+  renderFeed();
+  updateHud();
+  added.slice(0,4).forEach((s,i)=>setTimeout(()=>{ pulseNew(s); logEvent(s); }, i*250));
+}
 
-    if(isFirstLoad){
-      finishBoot();
-      isFirstLoad=false;
-      fetchAllDCWeather(); // initial DC weather fetch after first load
-    }
-    newSigs.slice(0,6).forEach((s,i)=>setTimeout(()=>{
-      pulseNew(s);
-      logEvent(s);
-    }, i*350));
-    nextRefreshSec = 30;
-  } catch(e){
-    setHudStatus('DEGRADED', false);
-    console.error(e);
-  }
+function updateSourceStatus(src, state){
+  sourceStatus[src] = state;
+  renderSourceStatus();
+}
+
+function renderSourceStatus(){
+  const el = document.getElementById('hud-sources');
+  if(!el) return;
+  const online = Object.values(sourceStatus).filter(v=>v==='ok').length;
+  el.textContent = online;
+  // Update STATUS pill
+  const anyError = Object.values(sourceStatus).some(v=>v==='error');
+  const anyLoading = Object.values(sourceStatus).some(v=>v==='loading');
+  if(anyError && !anyLoading) setHudStatus('DEGRADED', false);
+  else if(anyLoading)         setHudStatus('UPDATING', false);
+  else                        setHudStatus('NOMINAL', true);
+}
+
+async function startBackgroundFetch(){
+  const FETCH_PLAN = [
+    { key:'arxiv',       fn:fetchArxiv,    delay:500  },
+    { key:'github',      fn:fetchGitHub,   delay:1000 },
+    { key:'hn',          fn:fetchHN,       delay:1500 },
+    { key:'devto',       fn:fetchDevTo,    delay:2000 },
+    { key:'huggingface', fn:fetchHF,       delay:2500 },
+    { key:'news',        fn:fetchNews,     delay:3000 },
+    { key:'semantic',    fn:fetchSemantic, delay:3500 },
+    { key:'reddit',      fn:fetchReddit,   delay:4000 },
+  ];
+
+  // Mark all as loading
+  FETCH_PLAN.forEach(({key})=>{ sourceStatus[key]='loading'; });
+  renderSourceStatus();
+
+  FETCH_PLAN.forEach(({key,fn,delay})=>{
+    setTimeout(async ()=>{
+      try {
+        const sigs = await fn();
+        mergeSignals(sigs, key);
+        updateSourceStatus(key, 'ok');
+        document.getElementById('hud-last').textContent = utcTime();
+      } catch(e){
+        updateSourceStatus(key, 'error');
+        console.warn(key+':', e.message);
+      }
+      // On first complete fetch of all sources, trigger DC weather
+      const done = Object.values(sourceStatus).filter(v=>v!=='loading').length;
+      if(done === FETCH_PLAN.length && isFirstLoad){
+        isFirstLoad = false;
+        fetchAllDCWeather();
+      }
+    }, delay);
+  });
+
+  nextRefreshSec = 30;
 }
 
 /* ── HUD HELPERS ─────────────────────────────────────────────── */
@@ -506,47 +581,6 @@ function updateHud(){
 function startClock(){
   const el = document.getElementById('hud-utc');
   setInterval(()=>{ if(el) el.textContent = utcTime(); }, 1000);
-}
-
-/* ── BOOT SEQUENCE ───────────────────────────────────────────── */
-const BOOT_LINES = [
-  ['LOADING GLOBE RENDERER',    'ok'],
-  ['CONNECTING ARXIV FEED',     'ok'],
-  ['CONNECTING GITHUB API',     'ok'],
-  ['CONNECTING HN FIREBASE',    'ok'],
-  ['CONNECTING REDDIT RSS',     'ok'],
-  ['CONNECTING HUGGINGFACE',    'ok'],
-  ['LOADING COUNTRY GEOJSON',   'ok'],
-  ['INITIALIZING SIGNAL LAYER', 'ok'],
-  ['LOADING DATACENTER GRID',   'ok'],
-  ['FETCHING OPEN-METEO DATA',  'ok'],
-  ['STARTING INTEL STREAM',     'ok'],
-];
-function runBoot(){
-  const linesEl  = document.getElementById('boot-lines');
-  const barEl    = document.getElementById('boot-bar-fill');
-  const statusEl = document.getElementById('boot-status');
-  let i = 0;
-  const tick = ()=>{
-    if(i >= BOOT_LINES.length) return;
-    const [text, cls] = BOOT_LINES[i];
-    const div = document.createElement('div');
-    div.className = `boot-line ${cls}`;
-    div.textContent = `> ${text}`;
-    linesEl.appendChild(div);
-    i++;
-    const pct = Math.round((i/BOOT_LINES.length)*100);
-    barEl.style.width = pct+'%';
-    if(statusEl) statusEl.textContent = `LOADING… ${pct}%`;
-    if(i < BOOT_LINES.length) setTimeout(tick, 160+Math.random()*120);
-  };
-  tick();
-}
-function finishBoot(){
-  const overlay = document.getElementById('boot-overlay');
-  if(!overlay) return;
-  overlay.classList.add('fade');
-  setTimeout(()=>overlay.remove(), 900);
 }
 
 /* ── GLOBE INIT ──────────────────────────────────────────────── */
@@ -1200,7 +1234,7 @@ function startCountdown(){
     nextRefreshSec--;
     if(nextRefreshSec<=0){
       nextRefreshSec=30;
-      loadAll();
+      startBackgroundFetch();
       fetchAllDCWeather(); // refresh DC weather every 30s
     }
     if(el) el.textContent = `${nextRefreshSec}s`;
@@ -1248,12 +1282,12 @@ window.addEventListener('DOMContentLoaded',()=>{
   window.toggleTimelinePlay = toggleTimelinePlay;
   window.allSignals      = allSignals;
 
-  runBoot();
   startClock();
   initGlobe();
   bindFilters();
   bindLayers();
   initTimeline();
-  loadAll();
+  loadFallback();
+  setTimeout(startBackgroundFetch, 500);
   startCountdown();
 });
